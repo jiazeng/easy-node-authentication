@@ -6,15 +6,17 @@ module.exports = function(app, passport) {
 
     // // routes for home page
     // app.get('/', function(req, res) {
-    //     res.render('/index.html');
+    //     //res.render('/index.html');
+    //     res.redirect('/index.html');
     // });
 
-    // // PROFILE SECTION =========================
-    // app.get('/profile', isLoggedIn, function(req, res) {
-    //     res.render('profile', {
-    //         user : req.user // get the user out of session and pass to template
-    //     });
-    // });
+    // PROFILE SECTION =========================
+    app.get('/profile', isLoggedIn, function(req, res) {
+        res.redirect('profile.html', {
+        //res.render('profile', {
+            user : req.user // get the user out of session and pass to template
+        });
+    });
 
     // LOGOUT ==============================
     app.get('/logout', function(req, res) {
@@ -26,63 +28,68 @@ module.exports = function(app, passport) {
 // AUTHENTICATE (FIRST LOGIN) ==================================================
 // =============================================================================
 
-    // // locally --------------------------------
-    //     // LOGIN ===============================
-    //     // show the login form
-    //     app.get('/login', function(req, res) {
-    //         res.render('login.ejs', { message: req.flash('loginMessage') });
-    //     });
+    // locally --------------------------------
+        // LOGIN ===============================
+        // show the login form
+        app.get('/login', function(req, res) {
+            //res.render('login.ejs', { message: req.flash('loginMessage') });
+            res.redirect('login.html');
+        });
 
-    //     // process the login form
-    //     app.post('/login', passport.authenticate('local-login', {
-    //         successRedirect : '/profile', // redirect to the secure profile section
-    //         failureRedirect : '/login', // redirect back to the signup page if there is an error
-    //         failureFlash : true // allow flash messages
-    //     }));
+        // process the login form
+        app.post('/login', passport.authenticate('local-login', {
+            successRedirect : '/profile', // redirect to the secure profile section
+            failureRedirect : '/login', // redirect back to the signup page if there is an error
+        }));
 
-    //     // SIGNUP =================================
-    //     // show the signup form
-    //     app.get('/signup', function(req, res) {
-    //         res.render('signup.ejs', { message: req.flash('signupMessage') });
-    //     });
+        // SIGNUP =================================
+        // show the signup form
+        app.get('/signup', function(req, res) {
+            //res.render('signup.ejs', { message: req.flash('signupMessage') });
+            res.redirect('signup.html');
+        });
 
-    //     // process the signup form
-    //     app.post('/signup', passport.authenticate('local-signup', {
-    //         successRedirect : '/profile', // redirect to the secure profile section
-    //         failureRedirect : '/signup', // redirect back to the signup page if there is an error
-    //         failureFlash : true // allow flash messages
-    //     }));
+        // process the signup form
+        app.post('/signup', passport.authenticate('local-signup', {
+            successRedirect : '/profile', // redirect to the secure profile section
+            failureRedirect : '/signup', // redirect back to the signup page if there is an error
+        }));
 
     // facebook -------------------------------
         // send to facebook to do the authentication
         app.get('/auth/facebook', passport.authenticate('facebook', { scope : 'email' }));
-
-        // // handle the callback after facebook has authenticated the user
-        // app.get('/auth/facebook/callback', passport.authenticate('facebook', {
-        //         successRedirect : '/profile',
-        //         failureRedirect : '/'
-        //     }));
-            
+        
+       // log in     
        app.get('/auth/facebook/callback', passport.authenticate('facebook'), 
             function(req, res) {
-                console.log(res);
+                //console.log(res);
                 //res.redirect('/secure.html'); 
                 res.redirect('/profile.html');
             });
+            
+        // log out    
+        app.get('/logout', function(req, res) {
+            req.logout();
+            res.redirect('/');
+        });
+        
+        app.get('/data', function(req, res) {
+            return res.json(req.user);
+        });
 
 // =============================================================================
 // AUTHORIZE (ALREADY LOGGED IN / CONNECTING OTHER SOCIAL ACCOUNT) =============
 // =============================================================================
 
-    // // locally --------------------------------
-    //     app.get('/connect/local', function(req, res) {
-    //         res.render('connect-local.ejs', { message: req.flash('loginMessage') });
-    //     });
-    //     app.post('/connect/local', passport.authenticate('local-signup', {
-    //         successRedirect : '/profile', // redirect to the secure profile section
-    //         failureRedirect : '/connect/local', // redirect back to the signup page if there is an error
-    //         failureFlash : true // allow flash messages
-    //     }));
+    // locally --------------------------------
+        app.get('/connect/local', function(req, res) {
+            //res.render('connect-local.ejs', { message: req.flash('loginMessage') });
+            res.redirect('connect-local.html');
+        });
+        app.post('/connect/local', passport.authenticate('local-signup', {
+            successRedirect : '/profile', // redirect to the secure profile section
+            failureRedirect : '/connect/local', // redirect back to the signup page if there is an error
+        }));
 
     // facebook -------------------------------
         // send to facebook to do the authentication

@@ -1,20 +1,25 @@
 // server.js
 
 // set up ======================================================================
-// get all the tools we need
+// set up server and get all the tools needed
 var express  = require('express');
 var app      = express();
-//var port     = process.env.PORT || 8080;
 var mongoose = require('mongoose');
 var passport = require('passport');
 var flash    = require('connect-flash');
 
-var morgan       = require('morgan');
+var morgan       = require('morgan'); //load morgan to do logging
 var cookieParser = require('cookie-parser');
 var bodyParser   = require('body-parser');
-var session      = require('express-session');
+var session      = require('express-session'); //allow user session
 var RedisStore = require('connect-redis')(session); //stores session
 
+
+//load the cookie signature secret
+//this is used to digitally sign the cookie so that express can tell if it was 
+//tampered with on the client red this from an environment variable set
+//the environment variable using the command $export 
+//cookie_sig_secret = "my secret value" and then start the server 
 var cookieSigSecret = process.env.COOKIE_SIG_SECRET;
 if(!cookieSigSecret) {
     console.error('Please set COOKIE_SIG_SECRET');
@@ -24,6 +29,7 @@ if(!cookieSigSecret) {
 var configDB = require('./config/database.js');
 
 // configuration ===============================================================
+// connect to mongoDB
 mongoose.connect(configDB.url); // connect to our database
 
 require('./config/passport')(passport); // pass passport for configuration
@@ -32,7 +38,7 @@ require('./config/passport')(passport); // pass passport for configuration
 app.use(morgan('dev')); // log every request to the console
 app.use(cookieParser()); // read cookies (needed for auth)
 app.use(bodyParser.json()); // get information from html forms
-app.use(bodyParser.urlencoded({ extended: true }));
+//app.use(bodyParser.urlencoded({ extended: true }));
 
 //app.set('view engine', 'ejs'); // set up ejs for templating
 
@@ -44,9 +50,9 @@ app.use(session( { //session is a function
     store: new RedisStore()
 }));
 
-app.use(passport.initialize());
-app.use(passport.session()); // persistent login sessions
-app.use(flash()); // use connect-flash for flash messages stored in session
+app.use(passport.initialize()); //add authentication to the app
+app.use(passport.session()); // persistent login sessions, add session support
+//app.use(flash()); // use connect-flash for flash messages stored in session
 
 // routes ======================================================================
 require('./app/routes.js')(app, passport); // load our routes and pass in our app and fully configured passport
@@ -75,6 +81,7 @@ app.use(function(req, res, next) {
 //subdirectory as well, but since this middleware function
 //is added aftre the check above, express will never call it
 //if the function above doesn't call next()
+app.use('/js', express.static(__dirname + 'static/js'));
 app.use(express.static(__dirname + '/static/secure'));
 
 //start the user
