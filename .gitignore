@@ -16,3 +16,6 @@ node_modules
 
 config/database.js
 config/auth.js
+
+# ignore all files in any directory named `secret`
+**/auth/*

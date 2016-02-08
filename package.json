@@ -1,22 +1,33 @@
 {
   "name": "node-authentication",
   "main": "server.js",
-  "dependencies" : {
-    "express" : "~4.0.0",
-    "ejs" : "~0.8.5",
-    "mongoose" : "~3.8.1",
-    "passport" : "~0.1.17",
-    "passport-local" : "~0.1.6",
-    "passport-facebook" : "~1.0.2",
-    "passport-twitter" : "~1.0.2",
-    "passport-google-oauth" : "~0.1.5",
-    "connect-flash" : "~0.1.1",
-    "bcrypt-nodejs" : "latest",
+    "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
 
-    "morgan": "~1.0.0",
-    "body-parser": "~1.0.0",
-    "cookie-parser": "~1.0.0",
-    "method-override": "~1.0.0",
-    "express-session": "~1.0.0"
+  "dependencies" : {
+    "bcrypt": "^0.8.5",
+    "bcrypt-nodejs": "0.0.3",
+    "bluebird": "^3.2.1",
+    "body-parser": "^1.14.2",
+    "connect-flash": "^0.1.1",
+    "connect-redis": "^3.0.2",
+    "cookie-parser": "^1.4.1",
+    "ejs": "^2.4.1",
+    "express": "^4.13.4",
+    "express-session": "^1.13.0",
+    "mongoose": "^4.4.1",
+    "morgan": "^1.6.1",
+    "passport": "^0.3.2",
+    "passport-facebook": "^2.1.0",
+    "passport-github": "^1.1.0",
+    "passport-google-oauth": "^1.0.0",
+    "passport-local": "^1.0.0",
+    "passport-twitter": "^1.0.4",
+    "method-override": "~1.0.0"
   }
 }
+
+
+
