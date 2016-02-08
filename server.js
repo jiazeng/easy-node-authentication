@@ -51,13 +51,6 @@ app.use(flash()); // use connect-flash for flash messages stored in session
 // routes ======================================================================
 require('./app/routes.js')(app, passport); // load our routes and pass in our app and fully configured passport
 
-// // launch ======================================================================
-// app.listen(port);
-// console.log('The magic happens on port ' + port);
-
-
-
-
 //tell experss to serve static files from the /static/public
 //subdirectory (any user can see these)
 app.use(express.static(__dirname + '/static/public'));
@@ -83,10 +76,6 @@ app.use(function(req, res, next) {
 //is added aftre the check above, express will never call it
 //if the function above doesn't call next()
 app.use(express.static(__dirname + '/static/secure'));
-
-
-
-
 
 //start the user
 app.listen(80, function() {

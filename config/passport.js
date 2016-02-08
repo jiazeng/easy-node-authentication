@@ -6,10 +6,10 @@ var FacebookStrategy = require('passport-facebook').Strategy;
 var User       = require('../app/models/user');
 
 // load the auth variables
-var configAuth = require('./auth'); // use this one for testing
+var fbConfig = require('./auth'); // use this one for testing
 
 //add the callback URL
-configAuth.callbackURL = 'http://localhost:8080/signin/facebook/callback';
+fbConfig.callbackURL = 'http://localhost:8080/signin/facebook/callback';
 
 module.exports = function(passport) {
 
@@ -145,19 +145,16 @@ module.exports = function(passport) {
     // =========================================================================
     passport.use(new FacebookStrategy({
 
-        clientID        : configAuth.facebookAuth.clientID,
-        clientSecret    : configAuth.facebookAuth.clientSecret,
-        callbackURL     : configAuth.facebookAuth.callbackURL,
-        profileFields   : ['id', 'name', 'email'],
-        passReqToCallback : true // allows us to pass in the req from our route (lets us check if a user is logged in or not)
-
+        clientID        : fbConfig.facebookAuth.clientID,
+        clientSecret    : fbConfig.facebookAuth.clientSecret,
+        callbackURL     : fbConfig.facebookAuth.callbackURL,
+        profileFields   : ['email', 'id', 'displayName', 'name'],
+        // passReqToCallback : true // allows us to pass in the req from our route (lets us check if a user is logged in or not)
     },
     // faceboook will send back the token and profile
     function(req, token, refreshToken, profile, done) {
-
         // asynchronous
         process.nextTick(function() {
-
             // // check if the user is already logged in
             // if (!req.user) {
                 // find the user in the database based on their facebook id
@@ -165,7 +162,6 @@ module.exports = function(passport) {
                     if (err)
                         return done(err);
                     if (user) {
-
                         // // if there is a user id already but no token (user was linked at one point and then removed)
                         // if (!user.facebook.token) {
                         //     user.facebook.token = token;
@@ -187,17 +183,19 @@ module.exports = function(passport) {
                         // set all of the facebook information in user model
                         newUser.facebook.id    = profile.id;
                         newUser.facebook.token = token;
-                        newUser.facebook.name  = profile.name.givenName + ' ' + profile.name.familyName;
+                        // newUser.facebook.name  = profile.name.givenName + ' ' + profile.name.familyName;
+                        newUser.facebook.name = profile.displayName;
                         newUser.facebook.email = (profile.emails[0].value || '').toLowerCase();
                         // save user to the database
                         newUser.save(function(err) {
                             if (err)
                                 return done(err);
-                            // if successful, return the new user    
+                            // if successful, return the new user 
+                            console.log('User Saved Successful');        
                             return done(null, newUser);
                         });
                     }
-                });
+                });  
 
             // } else {
             //     // user already exists and is logged in, we have to link accounts
@@ -217,5 +215,7 @@ module.exports = function(passport) {
 
             // }
         });
+        done(null, profile);
+        console.log('Authentication Successful!');
     }));
 };
