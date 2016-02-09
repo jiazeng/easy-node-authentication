@@ -26,11 +26,14 @@ if(!cookieSigSecret) {
     process.exit(1);
 }
 
-var configDB = require('./config/database.js');
+//var configDB = require('./config/database.js');
 
 // configuration ===============================================================
 // connect to mongoDB
-mongoose.connect(configDB.url); // connect to our database
+//mongoose.connect(configDB.url); // connect to our database
+var dbConfig = require('./secret/config-mongo.json');
+// connect to mongoDB
+mongoose.connect(dbConfig.url);
 
 require('./config/passport')(passport); // pass passport for configuration
 
@@ -83,6 +86,7 @@ app.use(function(req, res, next) {
 //if the function above doesn't call next()
 app.use('/js', express.static(__dirname + 'static/js'));
 app.use(express.static(__dirname + '/static/secure'));
+
 
 //start the user
 app.listen(80, function() {

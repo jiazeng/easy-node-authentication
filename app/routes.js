@@ -54,10 +54,34 @@ module.exports = function(app, passport) {
             successRedirect : '/profile', // redirect to the secure profile section
             failureRedirect : '/signup', // redirect back to the signup page if there is an error
         }));
+        
+        
+        app.post('/signup', function(req, res) {
+            console.log("signup: " + req.body.username);
+            var newUser = new User();
+            var password = req.body.password;
+            //newUser.local.name = req.body.name;
+            newUser.local.username = req.body.username;
+            //newUser.local.password = req.body.password;
+            newUser.local.password = newUser.generateHash(password);
+            //TODO: VALIDATE
+            newUser.save(function(err) {
+                if(err) {
+                    console.error(err);
+                }
+             req.login(newUser, function(err) {
+                 if(err) {
+                     return next(err);
+                 }
+             return res.redirect('/profile.html'); //secure.html?
+             });
+            });    
+        });
+        
 
     // facebook -------------------------------
         // send to facebook to do the authentication
-        app.get('/auth/facebook', passport.authenticate('facebook', { scope : 'email' }));
+       app.get('/auth/facebook', passport.authenticate('facebook', { scope : 'email' }));
         
        // log in     
        app.get('/auth/facebook/callback', passport.authenticate('facebook'), 
@@ -77,19 +101,7 @@ module.exports = function(app, passport) {
             return res.json(req.user);
         });
 
-// =============================================================================
-// AUTHORIZE (ALREADY LOGGED IN / CONNECTING OTHER SOCIAL ACCOUNT) =============
-// =============================================================================
 
-    // locally --------------------------------
-        app.get('/connect/local', function(req, res) {
-            //res.render('connect-local.ejs', { message: req.flash('loginMessage') });
-            res.redirect('connect-local.html');
-        });
-        app.post('/connect/local', passport.authenticate('local-signup', {
-            successRedirect : '/profile', // redirect to the secure profile section
-            failureRedirect : '/connect/local', // redirect back to the signup page if there is an error
-        }));
 
     // facebook -------------------------------
         // send to facebook to do the authentication
@@ -105,34 +117,8 @@ module.exports = function(app, passport) {
         app.get('/api/v1/users/me/', function(req, res) {
             //req.user is the currently authenticated user
             res.json(req.user);
-});
+        });
 
-
-// =============================================================================
-// UNLINK ACCOUNTS =============================================================
-// =============================================================================
-// used to unlink accounts. for social accounts, just remove the token
-// for local account, remove email and password
-// user account will stay active in case they want to reconnect in the future
-
-    // // local -----------------------------------
-    // app.get('/unlink/local', isLoggedIn, function(req, res) {
-    //     var user            = req.user;
-    //     user.local.email    = undefined;
-    //     user.local.password = undefined;
-    //     user.save(function(err) {
-    //         res.redirect('/profile');
-    //     });
-    // });
-
-    // // facebook -------------------------------
-    // app.get('/unlink/facebook', isLoggedIn, function(req, res) {
-    //     var user            = req.user;
-    //     user.facebook.token = undefined;
-    //     user.save(function(err) {
-    //         res.redirect('/profile');
-    //     });
-    // });
 };
 
 // route middleware to ensure user is logged in

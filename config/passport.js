@@ -6,10 +6,12 @@ var FacebookStrategy = require('passport-facebook').Strategy;
 var User       = require('../app/models/user');
 
 // load the auth variables
-var fbConfig = require('./auth'); // use this one for testing
-
+// var fbConfig = require('./auth'); // use this one for testing
+var fbConfig = require('../secret/oauth-facebook.json');
 //add the callback URL
-fbConfig.callbackURL = 'http://localhost:8080/signin/facebook/callback';
+fbConfig.callbackURL = 'http://localhost:8080/auth/facebook/callback';
+
+var dbConfig = require('../secret/config-mongo.json');    
 
 module.exports = function(passport) {
 
@@ -18,121 +20,162 @@ module.exports = function(passport) {
     // =========================================================================
     // required for persistent login sessions
     // passport needs ability to serialize and unserialize users out of session
-    
+        
     // used to serialize the user to the session store
     passport.serializeUser(function(user, done) {
         done(null, user);
     });
- 
     // used to descerialize the data back into a full user object on next request
     passport.deserializeUser(function(user,done) {
     done(null,user);
 });
 
     // =========================================================================
-    // LOCAL LOGIN =============================================================
+    // LOCAL====================================================================
     // =========================================================================
-    passport.use('local-login', new LocalStrategy({
-        // by default, local strategy uses username and password, we will override with email
-        usernameField : 'email',
-        passwordField : 'password',
-        passReqToCallback : true // allows us to pass in the req from our route (lets us check if a user is logged in or not)
-    },
-    function(req, email, password, done) {
-        if (email)
-            email = email.toLowerCase(); // Use lower-case e-mails to avoid case-sensitive e-mail matching
 
-        // asynchronous
-        process.nextTick(function() {
-            User.findOne({ 'local.email' :  email }, function(err, user) {
-                // if there are any errors, return the error
-                if (err)
-                    return done(err);
-
-                // if no user is found, return the message
-                if (!user)
-                    return done(null, false);
-
-                if (!user.validPassword(password))
-                    return done(null, false);
-
-                // all is well, return user
-                else
-                    return done(null, user);
-            });
-        });
-
-    }));
-
-    // =========================================================================
-    // LOCAL SIGNUP ============================================================
-    // =========================================================================
-    passport.use('local-signup', new LocalStrategy({
-        // by default, local strategy uses username and password, we will override with email
-        usernameField : 'email',
-        passwordField : 'password',
-        passReqToCallback : true // allows us to pass in the req from our route (lets us check if a user is logged in or not)
-    },
-    function(req, email, password, done) {
-        if (email)
-            email = email.toLowerCase(); // Use lower-case e-mails to avoid case-sensitive e-mail matching
-
-        // asynchronous
-        process.nextTick(function() {
-            // if the user is not already logged in:
-            if (!req.user) {
-                User.findOne({ 'local.email' :  email }, function(err, user) {
-                    // if there are any errors, return the error
-                    if (err)
-                        return done(err);
-                    // check to see if theres already a user with that email
-                    if (user) {
-                        return done(null, false, req.flash('signupMessage', 'That email is already taken.'));
-                    } else {
-                        // create the user
-                        var newUser            = new User();
-
-                        newUser.local.email    = email;
-                        newUser.local.password = newUser.generateHash(password);
-
-                        newUser.save(function(err) {
-                            if (err)
-                                return done(err);
-                            return done(null, newUser);
-                        });
-                    }
-
-                });
-            // if the user is logged in but has no local account...
-            } else if ( !req.user.local.email ) {
-                // ...presumably they're trying to connect a local account
-                // BUT let's check if the email used to connect a local account is being used by another user
-                User.findOne({ 'local.email' :  email }, function(err, user) {
-                    if (err)
-                        return done(err);
-                    
-                    if (user) {
-                        return done(null, false, req.flash('loginMessage', 'That email is already taken.'));
-                        // Using 'loginMessage instead of signupMessage because it's used by /connect/local'
-                    } else {
-                        var user = req.user;
-                        user.local.email = email;
-                        user.local.password = user.generateHash(password);
-                        user.save(function (err) {
-                            if (err)
-                                return done(err);                           
-                            return done(null,user);
-                        });
-                    }
-                });
-            } else {
-                // user is logged in and already has a local account. Ignore signup. (You should log out before trying to create a new account, user!)
-                return done(null, req.user);
+var localStrategy = new LocalStrategy(dbConfig, function(username, password, done) {
+    console.log("looking up user: " + username + ": " + password);
+    // asynchronous
+    process.nextTick(function() {
+        User.findOne({ 'local.username' : username}, function(err, user) {
+//      User.findOne({ 'local.email' :  email }, function(err, user) {
+            // if there are any errors, return the error
+            if(err) {
+                console.log(err);
+                return done(err);
             }
+            //if no user is found, return the message
+            if(user) {
+                console.dir(user);
+                return done(null, user);
+            }
+            
+            if(!user.validPassword) {
+                return done(null, false);
+            }
+            // else {
+            //     // create the user
+            //     var newUser            = new User();
 
+            //     newUser.local.email    = email;
+            //     newUser.local.password = newUser.generateHash(password);
+
+            //     newUser.save(function(err) {
+            //         if (err)
+            //             return done(err);
+            //         return done(null, newUser);
+            //     });
+            // }
         });
+              
+    });
+});
+    
 
-    }));
+//     // =========================================================================
+//     // LOCAL LOGIN =============================================================
+//     // =========================================================================
+//     passport.use('local-login', new LocalStrategy({
+//         // by default, local strategy uses username and password, we will override with email
+//         usernameField : 'email',
+//         passwordField : 'password',
+//         passReqToCallback : true // allows us to pass in the req from our route (lets us check if a user is logged in or not)
+//     },
+//     function(req, email, password, done) {
+//         if (email)
+//             email = email.toLowerCase(); // Use lower-case e-mails to avoid case-sensitive e-mail matching
+
+//         // asynchronous
+//         process.nextTick(function() {
+//             User.findOne({ 'local.email' :  email }, function(err, user) {
+//                 // if there are any errors, return the error
+//                 if (err)
+//                     return done(err);
+
+//                 // if no user is found, return the message
+//                 if (!user)
+//                     return done(null, false);
+
+//                 if (!user.validPassword(password))
+//                     return done(null, false);
+
+//                 // all is well, return user
+//                 else
+//                     return done(null, user);
+//             });
+//         });
+
+//     }));
+
+    // // =========================================================================
+    // // LOCAL SIGNUP ============================================================
+    // // =========================================================================
+    
+
+    // passport.use('local-signup', new LocalStrategy({
+    //     // by default, local strategy uses username and password, we will override with email
+    //     usernameField : 'email',
+    //     passwordField : 'password',
+    //     passReqToCallback : true // allows us to pass in the req from our route (lets us check if a user is logged in or not)
+    // },
+    // function(req, email, password, done) {
+    //     if (email)
+    //         email = email.toLowerCase(); // Use lower-case e-mails to avoid case-sensitive e-mail matching
+
+    //     // asynchronous
+    //     process.nextTick(function() {
+    //         // if the user is not already logged in:
+    //         if (!req.user) {
+    //             User.findOne({ 'local.email' :  email }, function(err, user) {
+    //                 // if there are any errors, return the error
+    //                 if (err)
+    //                     return done(err);
+    //                 // check to see if theres already a user with that email
+    //                 if (user) {
+    //                     return done(null, false, req.flash('signupMessage', 'That email is already taken.'));
+    //                 } else {
+    //                     // create the user
+    //                     var newUser            = new User();
+
+    //                     newUser.local.email    = email;
+    //                     newUser.local.password = newUser.generateHash(password);
+
+    //                     newUser.save(function(err) {
+    //                         if (err)
+    //                             return done(err);
+    //                         return done(null, newUser);
+    //                     });
+    //                 }
+    //             });
+    //         // if the user is logged in but has no local account...
+    //         } else if ( !req.user.local.email ) {
+    //             // ...presumably they're trying to connect a local account
+    //             // BUT let's check if the email used to connect a local account is being used by another user
+    //             User.findOne({ 'local.email' :  email }, function(err, user) {
+    //                 if (err)
+    //                     return done(err);           
+    //                 if (user) {
+    //                     // return done(null, false, req.flash('loginMessage', 'That email is already taken.'));
+    //                     return done(null, false);
+    //                     // Using 'loginMessage instead of signupMessage because it's used by /connect/local'
+    //                 } else {
+    //                     var user = req.user;
+    //                     user.local.email = email;
+    //                     user.local.password = user.generateHash(password);
+    //                     user.save(function (err) {
+    //                         if (err)
+    //                             return done(err);                           
+    //                         return done(null,user);
+    //                     });
+    //                 }
+    //             });
+    //         } else {
+    //             // user is logged in and already has a local account. Ignore signup. (You should log out before trying to create a new account, user!)
+    //             return done(null, req.user);
+    //         }
+    //     });
+    // }));
 
     // =========================================================================
     // FACEBOOK ================================================================
@@ -142,10 +185,9 @@ module.exports = function(passport) {
     // is called after the uesr has authenticated and FB has returned 
     // to the server 'profile' contains the full profile info
     var fbStrategy = new FacebookStrategy({
-
-        clientID        : fbConfig.facebookAuth.clientID,
-        clientSecret    : fbConfig.facebookAuth.clientSecret,
-        callbackURL     : fbConfig.facebookAuth.callbackURL,
+        clientID        : fbConfig.clientID,
+        clientSecret    : fbConfig.clientSecret,
+        callbackURL     : fbConfig.callbackURL,
         profileFields   : ['email', 'id', 'displayName', 'name'],
         passReqToCallback : true // allows us to pass in the req from our route (lets us check if a user is logged in or not)
     },
@@ -222,5 +264,6 @@ module.exports = function(passport) {
         done(null, profile);
     });
     passport.use(fbStrategy);
+    passport.use(localStrategy);
 };
 
